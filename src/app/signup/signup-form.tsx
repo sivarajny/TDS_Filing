@@ -15,6 +15,11 @@ const ROLES = [
     label: "Developer / Builder",
     hint: "Manage compliance across many buyers",
   },
+  {
+    value: "ca",
+    label: "CA / Consultant",
+    hint: "Read-only access to clients who invite you",
+  },
 ] as const;
 
 export function SignupForm() {
@@ -31,7 +36,7 @@ export function SignupForm() {
 
       <div>
         <span className="mb-2 block text-sm font-medium text-slate-700">I am a…</span>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {ROLES.map((r) => (
             <button
               key={r.value}

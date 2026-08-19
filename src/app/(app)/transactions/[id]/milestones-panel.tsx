@@ -15,16 +15,18 @@ type MilestoneRow = Database["public"]["Views"]["v_milestones_with_status"]["Row
 export function MilestonesPanel({
   transactionId,
   milestones,
+  readOnly = false,
 }: {
   transactionId: string;
   milestones: MilestoneRow[];
+  readOnly?: boolean;
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-semibold text-slate-900">Payment milestones</h2>
       <div className="mt-3 space-y-3">
         {milestones.map((m) => (
-          <MilestoneCard key={m.id} milestone={m} transactionId={transactionId} />
+          <MilestoneCard key={m.id} milestone={m} transactionId={transactionId} readOnly={readOnly} />
         ))}
       </div>
     </div>
@@ -34,9 +36,11 @@ export function MilestonesPanel({
 function MilestoneCard({
   milestone,
   transactionId,
+  readOnly,
 }: {
   milestone: MilestoneRow;
   transactionId: string;
+  readOnly: boolean;
 }) {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showFiledForm, setShowFiledForm] = useState(false);
@@ -81,7 +85,7 @@ function MilestoneCard({
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {!isPaid ? (
+        {!isPaid && !readOnly ? (
           <Button variant="secondary" onClick={() => setShowPaymentForm((v) => !v)}>
             Record payment
           </Button>
@@ -91,17 +95,19 @@ function MilestoneCard({
             <Link href={`/transactions/${transactionId}/milestones/${milestone.id}/prefill`}>
               <Button variant="secondary">Get pre-fill package</Button>
             </Link>
-            <Button variant="secondary" onClick={() => setShowFiledForm((v) => !v)}>
-              Mark as filed
-            </Button>
+            {!readOnly ? (
+              <Button variant="secondary" onClick={() => setShowFiledForm((v) => !v)}>
+                Mark as filed
+              </Button>
+            ) : null}
           </>
         ) : null}
       </div>
 
-      {!isPaid && showPaymentForm ? (
+      {!readOnly && !isPaid && showPaymentForm ? (
         <PaymentForm milestoneId={milestone.id} transactionId={transactionId} />
       ) : null}
-      {isPaid && !isFiled && showFiledForm ? (
+      {!readOnly && isPaid && !isFiled && showFiledForm ? (
         <FiledForm milestoneId={milestone.id} transactionId={transactionId} />
       ) : null}
     </div>

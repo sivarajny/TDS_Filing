@@ -32,11 +32,13 @@ export async function requireProfile(): Promise<Profile> {
 export async function requireRole(role: UserRole): Promise<Profile> {
   const profile = await requireProfile();
   if (profile.role !== role) {
-    redirect(profile.role === "developer_admin" ? "/admin" : "/dashboard");
+    redirect(homePathForRole(profile.role));
   }
   return profile;
 }
 
 export function homePathForRole(role: UserRole): string {
-  return role === "developer_admin" ? "/admin" : "/dashboard";
+  if (role === "developer_admin") return "/admin";
+  if (role === "ca") return "/advisor";
+  return "/dashboard";
 }

@@ -80,6 +80,22 @@ export async function listTransactionsForOrg(
   return summarizeTransactions(supabase, transactions ?? []);
 }
 
+/**
+ * All transactions visible to the calling CA — relies entirely on RLS
+ * ("advisors can view linked buyers' transactions") to scope the result,
+ * since an advisor has no org_id/buyer_id of their own to filter by.
+ */
+export async function listTransactionsForAdvisor(
+  supabase: SupabaseClient<Database>,
+): Promise<TransactionSummary[]> {
+  const { data: transactions, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return summarizeTransactions(supabase, transactions ?? []);
+}
+
 export async function getTransactionDetail(
   supabase: SupabaseClient<Database>,
   transactionId: string,

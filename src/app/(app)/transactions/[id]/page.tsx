@@ -10,7 +10,7 @@ import { DocumentsPanel } from "./documents-panel";
 
 export default async function TransactionDetailPage(props: PageProps<"/transactions/[id]">) {
   const { id } = await props.params;
-  await requireProfile();
+  const profile = await requireProfile();
 
   const supabase = await createClient();
   const detail = await getTransactionDetail(supabase, id);
@@ -18,6 +18,10 @@ export default async function TransactionDetailPage(props: PageProps<"/transacti
 
   const { transaction, milestones, lowerDeductionCertificate, documents } = detail;
   const isNri = transaction.seller_residential_status === "nri";
+  // CAs get RLS-enforced read-only access (see advisor_links) — the DB
+  // already blocks any write, this just keeps the UI from offering buttons
+  // that would only fail.
+  const readOnly = profile.role === "ca";
   const totalMilestoneAmount = milestones.reduce((sum, m) => sum + m.amount, 0);
   const totalTds = milestones.reduce((sum, m) => sum + (m.tds_amount ?? 0), 0);
 
@@ -68,15 +72,20 @@ export default async function TransactionDetailPage(props: PageProps<"/transacti
       </div>
 
       {isNri ? (
-        <LdcPanel transactionId={transaction.id} certificate={lowerDeductionCertificate} />
+        <LdcPanel
+          transactionId={transaction.id}
+          certificate={lowerDeductionCertificate}
+          readOnly={readOnly}
+        />
       ) : null}
 
-      <MilestonesPanel transactionId={transaction.id} milestones={milestones} />
+      <MilestonesPanel transactionId={transaction.id} milestones={milestones} readOnly={readOnly} />
 
       <DocumentsPanel
         transactionId={transaction.id}
         milestones={milestones}
         documents={documents}
+        readOnly={readOnly}
       />
     </div>
   );

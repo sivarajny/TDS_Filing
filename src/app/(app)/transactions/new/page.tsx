@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { requireProfile } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import { requireProfile, homePathForRole } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { NewTransactionForm } from "./new-transaction-form";
 
@@ -7,6 +8,8 @@ export const metadata: Metadata = { title: "New transaction — TDS Property Tra
 
 export default async function NewTransactionPage() {
   const profile = await requireProfile();
+  // CAs have read-only access — nothing here for them to create.
+  if (profile.role === "ca") redirect(homePathForRole(profile.role));
 
   let buyers: Array<{ id: string; full_name: string | null; email: string }> = [];
   let projects: Array<{ id: string; name: string }> = [];

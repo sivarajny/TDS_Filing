@@ -16,27 +16,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
 
           <nav className="flex flex-wrap items-center gap-1 text-sm">
-            {profile.role === "buyer" ? (
-              <Link
-                href="/dashboard"
-                className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
-              >
-                My Transactions
-              </Link>
-            ) : (
-              <Link
-                href="/admin"
-                className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
-              >
-                Dashboard
-              </Link>
-            )}
             <Link
-              href="/transactions/new"
+              href={home}
               className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
             >
-              New Transaction
+              {profile.role === "buyer"
+                ? "My Transactions"
+                : profile.role === "ca"
+                  ? "Client Transactions"
+                  : "Dashboard"}
             </Link>
+            {profile.role !== "ca" ? (
+              <Link
+                href="/transactions/new"
+                className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"
+              >
+                New Transaction
+              </Link>
+            ) : null}
           </nav>
 
           <div className="flex items-center gap-3">

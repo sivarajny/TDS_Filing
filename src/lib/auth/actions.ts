@@ -15,7 +15,7 @@ const signUpSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required"),
   email: emailSchema,
   password: passwordSchema,
-  role: z.enum(["buyer", "developer_admin"]),
+  role: z.enum(["buyer", "developer_admin", "ca"]),
   orgName: z.string().trim().optional(),
 });
 
@@ -87,6 +87,15 @@ export async function signUp(
         error:
           "Account created but could not be linked to your organization. Please contact support.",
       };
+    }
+  } else if (role === "ca") {
+    const admin = createAdminClient();
+    const { error: promoteError } = await admin
+      .from("profiles")
+      .update({ role: "ca" })
+      .eq("id", data.user.id);
+    if (promoteError) {
+      return { error: "Account created but could not be set up. Please contact support." };
     }
   }
 

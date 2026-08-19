@@ -36,27 +36,34 @@ export function DocumentsPanel({
   transactionId,
   milestones,
   documents,
+  readOnly = false,
 }: {
   transactionId: string;
   milestones: MilestoneRow[];
   documents: DocumentRow[];
+  readOnly?: boolean;
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-semibold text-slate-900">Document vault</h2>
       <p className="mt-0.5 text-xs text-slate-500">
         Challan receipts, Form 16B/141, and ID proofs — stored privately, visible only to this
-        transaction&apos;s buyer and org admins.
+        transaction&apos;s buyer, org admins, and any advisor the buyer has invited.
       </p>
 
-      <UploadForm transactionId={transactionId} milestones={milestones} />
+      {!readOnly ? <UploadForm transactionId={transactionId} milestones={milestones} /> : null}
 
       <ul className="mt-4 divide-y divide-slate-100">
         {documents.length === 0 ? (
           <li className="py-3 text-sm text-slate-500">No documents uploaded yet.</li>
         ) : (
           documents.map((doc) => (
-            <DocumentItem key={doc.id} document={doc} transactionId={transactionId} />
+            <DocumentItem
+              key={doc.id}
+              document={doc}
+              transactionId={transactionId}
+              readOnly={readOnly}
+            />
           ))
         )}
       </ul>
@@ -180,9 +187,11 @@ function UploadForm({
 function DocumentItem({
   document,
   transactionId,
+  readOnly,
 }: {
   document: DocumentRow;
   transactionId: string;
+  readOnly: boolean;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [, deleteAction, deleting] = useActionState(deleteDocument, null);
@@ -216,13 +225,15 @@ function DocumentItem({
             View
           </Button>
         )}
-        <form action={deleteAction}>
-          <input type="hidden" name="documentId" value={document.id} />
-          <input type="hidden" name="transactionId" value={transactionId} />
-          <Button type="submit" variant="ghost" disabled={deleting} className="text-xs text-red-600 hover:bg-red-50">
-            Delete
-          </Button>
-        </form>
+        {!readOnly ? (
+          <form action={deleteAction}>
+            <input type="hidden" name="documentId" value={document.id} />
+            <input type="hidden" name="transactionId" value={transactionId} />
+            <Button type="submit" variant="ghost" disabled={deleting} className="text-xs text-red-600 hover:bg-red-50">
+              Delete
+            </Button>
+          </form>
+        ) : null}
       </div>
     </li>
   );

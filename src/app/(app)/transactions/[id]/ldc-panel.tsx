@@ -29,9 +29,11 @@ const STATUS_STYLES: Record<LowerDeductionStatus, string> = {
 export function LdcPanel({
   transactionId,
   certificate,
+  readOnly = false,
 }: {
   transactionId: string;
   certificate: Ldc | null;
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const status = certificate?.status ?? "not_applicable";
@@ -79,13 +81,17 @@ export function LdcPanel({
         </dl>
       ) : null}
 
-      <div className="mt-3">
-        <Button variant="secondary" onClick={() => setEditing((v) => !v)}>
-          {editing ? "Cancel" : "Update status"}
-        </Button>
-      </div>
+      {!readOnly ? (
+        <div className="mt-3">
+          <Button variant="secondary" onClick={() => setEditing((v) => !v)}>
+            {editing ? "Cancel" : "Update status"}
+          </Button>
+        </div>
+      ) : null}
 
-      {editing ? <LdcForm transactionId={transactionId} certificate={certificate} /> : null}
+      {!readOnly && editing ? (
+        <LdcForm transactionId={transactionId} certificate={certificate} />
+      ) : null}
     </div>
   );
 }

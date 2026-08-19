@@ -24,7 +24,7 @@ async function getOrCreateUser(
   params: {
     email: string;
     fullName: string;
-    role: "buyer" | "developer_admin";
+    role: "buyer" | "developer_admin" | "ca";
     orgId?: string;
   },
 ): Promise<string> {
@@ -274,6 +274,17 @@ async function main() {
     role: "buyer",
     orgId,
   });
+  const caId = await getOrCreateUser(admin, {
+    email: "demo.ca@example.com",
+    fullName: "Kavita Rao, CA",
+    role: "ca",
+  });
+
+  console.log("Linking CA to buyer 1 (read-only access)...");
+  const { error: linkError } = await admin
+    .from("advisor_links")
+    .upsert({ buyer_id: buyer1Id, advisor_id: caId }, { onConflict: "buyer_id,advisor_id" });
+  if (linkError) throw new Error(`Could not link advisor: ${linkError.message}`);
 
   console.log("Seeding transaction 1 (standalone buyer, resident seller, 26QB -> 141 span)...");
   await seedTransaction(admin, {
@@ -415,6 +426,7 @@ async function main() {
   console.log("  buyer (standalone): demo.buyer1@example.com");
   console.log("  buyer (org, resident seller): demo.buyer2@example.com");
   console.log("  buyer (org, NRI seller + LDC): demo.buyer3@example.com");
+  console.log("  ca (read-only, linked to buyer1): demo.ca@example.com");
 }
 
 main().catch((err) => {

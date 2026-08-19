@@ -5,7 +5,7 @@
 
 import type { TdsRules } from "@/lib/tds/rules-schema";
 
-export type UserRole = "buyer" | "developer_admin";
+export type UserRole = "buyer" | "developer_admin" | "ca";
 export type ResidentialStatus = "resident" | "nri";
 export type FilingFormType = "26QB" | "141";
 export type LowerDeductionStatus =
@@ -274,6 +274,22 @@ export interface Database {
           sent_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["reminders_log"]["Insert"]>;
+        Relationships: [];
+      };
+      advisor_links: {
+        Row: {
+          id: string;
+          buyer_id: string;
+          advisor_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_id: string;
+          advisor_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["advisor_links"]["Insert"]>;
         Relationships: [];
       };
     };
