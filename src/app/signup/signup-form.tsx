@@ -12,12 +12,12 @@ const ROLES = [
   { value: "buyer", label: "Buyer", hint: "Track my own property purchase(s)" },
   {
     value: "developer_admin",
-    label: "Developer / Builder",
+    label: "Developer/Builder",
     hint: "Manage compliance across many buyers",
   },
   {
     value: "ca",
-    label: "CA / Consultant",
+    label: "CA/Consultant",
     hint: "Read-only access to clients who invite you",
   },
 ] as const;
