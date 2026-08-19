@@ -3,6 +3,8 @@
 //   npx supabase gen types typescript --linked > src/types/database.types.ts
 // and reconcile any drift against this file.
 
+import type { TdsRules } from "@/lib/tds/rules-schema";
+
 export type UserRole = "buyer" | "developer_admin";
 export type ResidentialStatus = "resident" | "nri";
 export type FilingFormType = "26QB" | "141";
@@ -119,6 +121,7 @@ export interface Database {
           unit_number: string | null;
           buyer_pan: string;
           buyer_name: string;
+          buyer_address: string | null;
           seller_name: string;
           seller_pan: string | null;
           seller_residential_status: ResidentialStatus;
@@ -138,6 +141,7 @@ export interface Database {
           unit_number?: string | null;
           buyer_pan: string;
           buyer_name: string;
+          buyer_address?: string | null;
           seller_name: string;
           seller_pan?: string | null;
           seller_residential_status?: ResidentialStatus;
@@ -285,16 +289,13 @@ export interface Database {
   };
 }
 
-/** Structured shape of tds_rules_versions.rules — read by src/lib/tds/calculator.ts */
-export interface TdsRulesJson {
-  residentRate: number;
-  residentThreshold: number;
-  residentNoPanRate: number;
-  nriDefaultBaseRate: number;
-  nriNoPanRate: number;
-  surchargeSlabs: Array<{ minAmount: number; maxAmount: number | null; rate: number }>;
-  cessRate: number;
-}
+/**
+ * Structured shape of tds_rules_versions.rules, read by
+ * src/lib/tds/calculator.ts. Defined via zod in src/lib/tds/rules-schema.ts
+ * (the single source of truth) so a malformed DB row fails loudly instead
+ * of producing silent NaNs; re-exported here under the historical name.
+ */
+export type TdsRulesJson = TdsRules;
 
 /** Structured shape of milestones.calculation — the audit trail behind tds_amount. */
 export interface MilestoneCalculation {

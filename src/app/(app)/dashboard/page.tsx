@@ -1,6 +1,24 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
+import { listTransactionsForBuyer } from "@/lib/transactions/queries";
+import { TransactionsTable } from "@/components/transactions-table";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
-  await requireRole("buyer");
-  return <p className="text-slate-600">Your transactions will appear here.</p>;
+  const profile = await requireRole("buyer");
+  const supabase = await createClient();
+  const summaries = await listTransactionsForBuyer(supabase, profile.id);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-slate-900">My transactions</h1>
+        <Link href="/transactions/new">
+          <Button>+ New transaction</Button>
+        </Link>
+      </div>
+      <TransactionsTable summaries={summaries} />
+    </div>
+  );
 }
