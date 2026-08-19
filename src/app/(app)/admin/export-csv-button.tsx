@@ -50,6 +50,12 @@ export function ExportCsvButton({ summaries }: { summaries: TransactionSummary[]
 }
 
 function csvEscape(value: string): string {
+  // Neutralize formula injection: a cell starting with =, +, -, @, tab, or CR
+  // can be interpreted as a formula by Excel/Sheets when the CSV is opened.
+  // property_address/buyer_name/seller_name are free-text and attacker-controlled.
+  if (/^[=+\-@\t\r]/.test(value)) {
+    value = `'${value}`;
+  }
   if (/[",\n]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
   }

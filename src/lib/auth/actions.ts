@@ -42,8 +42,6 @@ export async function signUp(
     if (!orgName) {
       return { error: "Organization / builder name is required for a developer account" };
     }
-    // Creating the org has to happen before the user exists, so the
-    // handle_new_user trigger can attach org_id from signup metadata.
     // Uses the service-role client because there is no session yet.
     const admin = createAdminClient();
     const { data: org, error: orgError } = await admin
@@ -57,16 +55,40 @@ export async function signUp(
     orgId = org.id;
   }
 
+  // role/org_id are deliberately NOT passed as signUp metadata: that field
+  // (raw_user_meta_data) is set the same way whether it comes from this
+  // trusted server action or from anyone calling the *public*
+  // supabase.auth.signUp() directly with their own options.data — the
+  // database trigger that creates the profile row can't tell those apart.
+  // Every new profile starts as a plain buyer with no org; granting
+  // developer_admin + attaching the org happens below, via an explicit
+  // service-role update gated on this action's own server-side logic
+  // (i.e. "this request really did just create a fresh org").
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName, role, org_id: orgId },
+      data: { full_name: fullName },
     },
   });
 
   if (error) return { error: error.message };
+  if (!data.user) return { error: "Could not create account" };
+
+  if (role === "developer_admin" && orgId) {
+    const admin = createAdminClient();
+    const { error: promoteError } = await admin
+      .from("profiles")
+      .update({ role: "developer_admin", org_id: orgId })
+      .eq("id", data.user.id);
+    if (promoteError) {
+      return {
+        error:
+          "Account created but could not be linked to your organization. Please contact support.",
+      };
+    }
+  }
 
   if (!data.session) {
     return {

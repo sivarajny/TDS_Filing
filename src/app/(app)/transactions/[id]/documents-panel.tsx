@@ -10,6 +10,18 @@ import { Alert } from "@/components/ui/alert";
 type MilestoneRow = Database["public"]["Views"]["v_milestones_with_status"]["Row"];
 type DocumentRow = Database["public"]["Tables"]["documents"]["Row"];
 
+/**
+ * Keeps the storage object key predictable. RLS scopes access by the
+ * transactionId path segment we control, not by this filename, so this
+ * isn't itself an access-control boundary — it just avoids '/' in a raw
+ * filename creating confusing nested "folders" under the transaction, and
+ * caps length.
+ */
+function sanitizeFileName(name: string): string {
+  const cleaned = name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+  return cleaned.slice(-100);
+}
+
 const DOC_TYPE_LABELS: Record<DocumentType, string> = {
   challan_receipt: "Challan receipt",
   form16b_or_141: "Form 16B / 141",
@@ -78,7 +90,7 @@ function UploadForm({
     setUploading(true);
     try {
       const supabase = createClient();
-      const storagePath = `${transactionId}/${crypto.randomUUID()}-${file.name}`;
+      const storagePath = `${transactionId}/${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
       const { error: uploadErr } = await supabase.storage
         .from("documents")
         .upload(storagePath, file, { contentType: file.type || undefined });
@@ -207,7 +219,6 @@ function DocumentItem({
         <form action={deleteAction}>
           <input type="hidden" name="documentId" value={document.id} />
           <input type="hidden" name="transactionId" value={transactionId} />
-          <input type="hidden" name="storagePath" value={document.storage_path} />
           <Button type="submit" variant="ghost" disabled={deleting} className="text-xs text-red-600 hover:bg-red-50">
             Delete
           </Button>

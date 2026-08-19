@@ -72,19 +72,23 @@ export async function createTransaction(
       buyerId = buyerProfile.id;
     } else {
       const admin = createAdminClient();
+      // org_id is deliberately not passed as invite metadata — see the
+      // comment in src/lib/auth/actions.ts signUp(). The trigger always
+      // creates a plain buyer with no org; attach org_id explicitly below,
+      // authorized by this action's own requireProfile()+role check above
+      // rather than by data the invited user could otherwise forge.
       const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
         buyerSelection.data.buyerEmail,
-        {
-          data: {
-            full_name: buyerSelection.data.buyerName,
-            role: "buyer",
-            org_id: orgId,
-          },
-        },
+        { data: { full_name: buyerSelection.data.buyerName } },
       );
       if (inviteError || !invited.user) {
         return { error: inviteError?.message ?? "Could not invite buyer" };
       }
+      const { error: linkError } = await admin
+        .from("profiles")
+        .update({ org_id: orgId })
+        .eq("id", invited.user.id);
+      if (linkError) return { error: linkError.message };
       buyerId = invited.user.id;
     }
   } else {

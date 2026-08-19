@@ -110,16 +110,22 @@ export async function markMilestoneFiled(
   const { milestoneId, transactionId, challanNumber, acknowledgmentNumber } = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("milestones")
-    .update({
-      filed_at: new Date().toISOString(),
-      challan_number: challanNumber,
-      acknowledgment_number: acknowledgmentNumber ?? null,
-    })
+    .update(
+      {
+        filed_at: new Date().toISOString(),
+        challan_number: challanNumber,
+        acknowledgment_number: acknowledgmentNumber ?? null,
+      },
+      { count: "exact" },
+    )
     .eq("id", milestoneId);
 
   if (error) return { error: error.message };
+  // An RLS-blocked update matches 0 rows without erroring — surface that
+  // as a real error instead of a false "saved" response.
+  if (!count) return { error: "Milestone not found or you don't have access to it" };
 
   revalidatePath(`/transactions/${transactionId}`);
   return null;

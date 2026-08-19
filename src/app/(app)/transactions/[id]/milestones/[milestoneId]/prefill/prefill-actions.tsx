@@ -40,6 +40,12 @@ export function PrefillActions({
 }
 
 function csvEscape(value: string): string {
+  // Neutralize formula injection: a cell starting with =, +, -, @, tab, or CR
+  // can be interpreted as a formula by Excel/Sheets when the CSV is opened.
+  // Several rows here (seller/buyer name and address) are attacker-controlled.
+  if (/^[=+\-@\t\r]/.test(value)) {
+    value = `'${value}`;
+  }
   if (/[",\n]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
   }

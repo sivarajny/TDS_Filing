@@ -28,27 +28,38 @@ async function getOrCreateUser(
     orgId?: string;
   },
 ): Promise<string> {
+  // role/org_id are not trusted from signup metadata (see the trigger and
+  // src/lib/auth/actions.ts) — every new profile starts as a plain buyer,
+  // so promote it explicitly via the service-role client afterward.
   const { data, error } = await admin.auth.admin.createUser({
     email: params.email,
     password: DEMO_PASSWORD,
     email_confirm: true,
-    user_metadata: { full_name: params.fullName, role: params.role, org_id: params.orgId },
+    user_metadata: { full_name: params.fullName },
   });
+
+  let userId: string;
   if (!error && data.user) {
     console.log(`  created user ${params.email}`);
-    return data.user.id;
+    userId = data.user.id;
+  } else {
+    const { data: existing } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", params.email)
+      .maybeSingle();
+    if (!existing) throw new Error(`Could not create or find user ${params.email}: ${error?.message}`);
+    console.log(`  reusing existing user ${params.email}`);
+    userId = existing.id;
   }
 
-  const { data: existing } = await admin
+  const { error: promoteError } = await admin
     .from("profiles")
-    .select("id")
-    .eq("email", params.email)
-    .maybeSingle();
-  if (existing) {
-    console.log(`  reusing existing user ${params.email}`);
-    return existing.id;
-  }
-  throw new Error(`Could not create or find user ${params.email}: ${error?.message}`);
+    .update({ role: params.role, org_id: params.orgId ?? null })
+    .eq("id", userId);
+  if (promoteError) throw new Error(`Could not set role/org for ${params.email}: ${promoteError.message}`);
+
+  return userId;
 }
 
 async function getOrCreateOrg(admin: SupabaseClient<Database>, name: string): Promise<string> {

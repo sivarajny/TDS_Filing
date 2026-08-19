@@ -71,7 +71,6 @@ export async function recordDocument(
 const deleteDocumentSchema = z.object({
   documentId: z.string().uuid(),
   transactionId: z.string().uuid(),
-  storagePath: z.string().min(1),
 });
 
 export async function deleteDocument(
@@ -81,19 +80,36 @@ export async function deleteDocument(
   const parsed = deleteDocumentSchema.safeParse({
     documentId: formData.get("documentId"),
     transactionId: formData.get("transactionId"),
-    storagePath: formData.get("storagePath"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
-  const { documentId, transactionId, storagePath } = parsed.data;
+  const { documentId, transactionId } = parsed.data;
 
   const supabase = await createClient();
-  const { error: storageError } = await supabase.storage.from("documents").remove([storagePath]);
+
+  // Look up storage_path server-side (RLS-gated) rather than trusting a
+  // client-supplied path for a destructive operation — this also gives us
+  // a reliable "not found / not yours" check before touching anything.
+  const { data: doc, error: fetchError } = await supabase
+    .from("documents")
+    .select("storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (fetchError) return { error: fetchError.message };
+  if (!doc) return { error: "Document not found or you don't have access to it" };
+
+  const { error: storageError } = await supabase.storage
+    .from("documents")
+    .remove([doc.storage_path]);
   if (storageError) return { error: storageError.message };
 
-  const { error } = await supabase.from("documents").delete().eq("id", documentId);
+  const { error, count } = await supabase
+    .from("documents")
+    .delete({ count: "exact" })
+    .eq("id", documentId);
   if (error) return { error: error.message };
+  if (!count) return { error: "Document not found or you don't have access to it" };
 
   revalidatePath(`/transactions/${transactionId}`);
   return null;

@@ -46,19 +46,25 @@ export async function updateLowerDeductionCertificate(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("lower_deduction_certificates")
-    .update({
-      status,
-      certificate_number: certificateNumber ?? null,
-      certified_rate: certifiedRate ?? null,
-      valid_from: validFrom ?? null,
-      valid_to: validTo ?? null,
-      notes: notes ?? null,
-    })
+    .update(
+      {
+        status,
+        certificate_number: certificateNumber ?? null,
+        certified_rate: certifiedRate ?? null,
+        valid_from: validFrom ?? null,
+        valid_to: validTo ?? null,
+        notes: notes ?? null,
+      },
+      { count: "exact" },
+    )
     .eq("transaction_id", transactionId);
 
   if (error) return { error: error.message };
+  // An RLS-blocked update matches 0 rows without erroring — surface that
+  // as a real error instead of a false "saved" response.
+  if (!count) return { error: "Transaction not found or you don't have access to it" };
 
   revalidatePath(`/transactions/${transactionId}`);
   return null;
