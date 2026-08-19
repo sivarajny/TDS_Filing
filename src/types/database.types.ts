@@ -39,6 +39,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["orgs"]["Insert"]>;
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -62,6 +63,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
       };
       projects: {
         Row: {
@@ -79,6 +81,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
+        Relationships: [];
       };
       tds_rules_versions: {
         Row: {
@@ -102,6 +105,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["tds_rules_versions"]["Insert"]>;
+        Relationships: [];
       };
       transactions: {
         Row: {
@@ -143,6 +147,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["transactions"]["Insert"]>;
+        Relationships: [];
       };
       lower_deduction_certificates: {
         Row: {
@@ -174,6 +179,7 @@ export interface Database {
         Update: Partial<
           Database["public"]["Tables"]["lower_deduction_certificates"]["Insert"]
         >;
+        Relationships: [];
       };
       milestones: {
         Row: {
@@ -214,6 +220,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["milestones"]["Insert"]>;
+        Relationships: [];
       };
       documents: {
         Row: {
@@ -241,6 +248,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["documents"]["Insert"]>;
+        Relationships: [];
       };
       reminders_log: {
         Row: {
@@ -262,6 +270,7 @@ export interface Database {
           sent_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["reminders_log"]["Insert"]>;
+        Relationships: [];
       };
     };
     Views: {
@@ -269,8 +278,10 @@ export interface Database {
         Row: Database["public"]["Tables"]["milestones"]["Row"] & {
           compliance_status: ComplianceStatus;
         };
+        Relationships: [];
       };
     };
+    Functions: Record<string, never>;
   };
 }
 

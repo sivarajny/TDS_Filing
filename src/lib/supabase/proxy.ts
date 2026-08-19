@@ -1,10 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/api/cron"];
+const PUBLIC_EXACT_PATHS = ["/"];
+const PUBLIC_PATH_PREFIXES = ["/login", "/signup", "/auth", "/api/cron"];
 
 function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  return (
+    PUBLIC_EXACT_PATHS.includes(pathname) ||
+    PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p))
+  );
 }
 
 export async function updateSession(request: NextRequest) {
