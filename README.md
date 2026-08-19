@@ -35,6 +35,12 @@ screen.
    npm install
    npm run dev
    ```
+5. (Optional, for email reminders) Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`,
+   `NEXT_PUBLIC_APP_URL`, and `CRON_SECRET` in `.env.local` and on Vercel.
+   `vercel.json` schedules `/api/cron/reminders` daily at 03:00 UTC; Vercel
+   Cron automatically sends `Authorization: Bearer $CRON_SECRET`, which the
+   route checks. Without `RESEND_API_KEY`/`CRON_SECRET` set, the endpoint
+   just 401s — nothing else in the app depends on it.
 
 ## Project structure
 
@@ -44,6 +50,9 @@ screen.
   session-refresh proxy (Next.js 16 renamed `middleware.ts` → `proxy.ts`).
 - `src/lib/tds/` — the versioned TDS calculation engine (reads
   `tds_rules_versions` from the DB rather than hardcoding rates).
+- `src/app/api/cron/reminders/` — the daily T-14/T-7/T-1/overdue email job
+  (`src/lib/email/`), gated by `CRON_SECRET` and idempotent via
+  `reminders_log`'s unique `(milestone_id, reminder_type)` constraint.
 - `src/types/database.types.ts` — hand-maintained types matching the schema;
   regenerate with `npx supabase gen types typescript --linked` once linked
   to a live project and reconcile any drift.
