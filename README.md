@@ -41,6 +41,20 @@ screen.
    Cron automatically sends `Authorization: Bearer $CRON_SECRET`, which the
    route checks. Without `RESEND_API_KEY`/`CRON_SECRET` set, the endpoint
    just 401s — nothing else in the app depends on it.
+6. Seed demo data (needs `NEXT_PUBLIC_SUPABASE_URL` and
+   `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`, pointed at a project with
+   the migrations applied):
+   ```bash
+   npm run seed
+   ```
+   Creates one developer org ("Skyline Developers") with two buyers and one
+   standalone buyer, three transactions spanning resident + NRI sellers, an
+   approved Form 13 LDC, filed/overdue/due-soon/upcoming milestones, and the
+   26QB → Form 141 handover. Prints demo logins at the end (all use the
+   password `DemoPass123!`) — change or delete these before using the
+   project for anything real. Safe to re-run: it looks up existing
+   users/orgs/projects by email/name instead of duplicating them, though it
+   will insert duplicate transactions on a second run.
 
 ## Project structure
 
